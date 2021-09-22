@@ -3,7 +3,7 @@ package com.blogposts.blogposts.Models;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlogPostsModel {
+public class BlogPost {
     private int id;
     private String author;
     private int authorId;
@@ -66,5 +66,10 @@ public class BlogPostsModel {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }
