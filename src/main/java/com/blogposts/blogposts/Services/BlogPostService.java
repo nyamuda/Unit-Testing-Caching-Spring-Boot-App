@@ -3,8 +3,10 @@ package com.blogposts.blogposts.Services;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.blogposts.blogposts.Exceptions.ApiException;
@@ -33,6 +35,8 @@ public class BlogPostService {
         if (tags == null) {
             throw new ApiException("Tags parameter is required");
         }
+        // else extract the tags
+        String[] allTags = tags.split(",");
         // default value for the sortBy query parameter in case none was provided
         String sortByField = "";
         if (sortBy == null) {
@@ -46,45 +50,46 @@ public class BlogPostService {
 
         // NOW WE GET THE DATA AND DEAL WITH IT
         String url = "https://api.hatchways.io/assessment/blog/posts?tag=";
-        String[] alltags = { "tech", "health" };
 
-        List<BlogPost> allPostsCombined = new ArrayList<>();
+        // this is where we'll put all our combined posts.
+        // we using a set to avoid adding duplicate objects
+        Set<BlogPost> postsCombinedSet = new HashSet<>();
 
-        for (int i = 0; i < alltags.length; i++) {
+        // we make an API call for every tag in the allTags array
+        for (int i = 0; i < allTags.length; i++) {
             // make the request
             // the result will be an object (parent object) with one key "posts"
             // the value of that key will be all the posts-->the posts objects
-            // so first we need to bind the parent to the Post model
-            Post result = restTemplate.getForObject(url + alltags[i], Post.class);
+            // so first we need to bind the parent object to the Post model
+            Post result = restTemplate.getForObject(url + allTags[i], Post.class);
 
-            // then we use the Post model getPosts methods to get the actual posts(objects)
+            // then we use the Post model's getPosts method to get the actual posts(objects)
             List<BlogPost> allPosts = result.getPosts();
 
-            // we loop through the posts and add them to the allPostsCombined List
-            // if an object already exists in allPostsCombined, we don't add it
-            allPosts.forEach(val -> {
-                if (!allPostsCombined.contains(val)) {
-                    allPostsCombined.add(val);
-                }
-            });
+            // we then add all the objects to the "postsCombinedSet" set
+            postsCombinedSet.addAll(allPosts);
 
         }
+
+        // we convert our set to an List so that we can use the sort method to sort our
+        // posts.
+        List<BlogPost> postsCombinedList = new ArrayList<>(postsCombinedSet);
         // if the direction value is "desc"
-        // we sort the posts in descending order
+        // we sort the posts in descending order-->reversed()
         if (directionField.equals("desc")) {
             // we now begin sorting based on the value sortByFiled
             switch (sortByField) {
                 case "id":
-                    allPostsCombined.sort(comparing(BlogPost::getId).reversed());
+                    postsCombinedList.sort(comparing(BlogPost::getId).reversed());
                     break;
                 case "reads":
-                    allPostsCombined.sort(comparing(BlogPost::getReads).reversed());
+                    postsCombinedList.sort(comparing(BlogPost::getReads).reversed());
                     break;
                 case "likes":
-                    allPostsCombined.sort(comparing(BlogPost::getLikes).reversed());
+                    postsCombinedList.sort(comparing(BlogPost::getLikes).reversed());
                     break;
                 case "popularity":
-                    allPostsCombined.sort(comparing(BlogPost::getPopularity).reversed());
+                    postsCombinedList.sort(comparing(BlogPost::getPopularity).reversed());
                     break;
                 // else if the sortBy value is not an accepted value
                 default:
@@ -98,16 +103,16 @@ public class BlogPostService {
             // we now begin sorting based on the value sortByFiled
             switch (sortByField) {
                 case "id":
-                    allPostsCombined.sort(comparing(BlogPost::getId));
+                    postsCombinedList.sort(comparing(BlogPost::getId));
                     break;
                 case "reads":
-                    allPostsCombined.sort(comparing(BlogPost::getReads));
+                    postsCombinedList.sort(comparing(BlogPost::getReads));
                     break;
                 case "likes":
-                    allPostsCombined.sort(comparing(BlogPost::getLikes));
+                    postsCombinedList.sort(comparing(BlogPost::getLikes));
                     break;
                 case "popularity":
-                    allPostsCombined.sort(comparing(BlogPost::getPopularity));
+                    postsCombinedList.sort(comparing(BlogPost::getPopularity));
                     break;
                 // else if the sortBy value is not an accepted value
                 default:
@@ -116,11 +121,7 @@ public class BlogPostService {
 
         }
 
-        // then we choose the direction
-        // the default is asc-->is also the default of the sort method used above
-        // meaning when we sort the posts they will already be in ascending order
-
-        return allPostsCombined;
+        return postsCombinedList;
 
     }
 }
