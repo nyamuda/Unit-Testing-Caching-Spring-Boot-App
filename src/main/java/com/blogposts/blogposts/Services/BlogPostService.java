@@ -1,25 +1,16 @@
 package com.blogposts.blogposts.Services;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.blogposts.blogposts.Exceptions.ApiException;
 import com.blogposts.blogposts.Models.BlogPost;
 import com.blogposts.blogposts.Models.Post;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import static java.util.Comparator.comparing;
-import static java.util.Comparator.reverseOrder;
 
 @Service
 public class BlogPostService {
@@ -41,11 +32,6 @@ public class BlogPostService {
         String sortByField = "";
         if (sortBy == null) {
             sortByField = "id";
-        }
-        // default value for the direction query parameter in case none was provided
-        String directionField = "";
-        if (direction == null) {
-            directionField = "desc";
         }
 
         // NOW WE GET THE DATA AND DEAL WITH IT
@@ -76,7 +62,7 @@ public class BlogPostService {
         List<BlogPost> postsCombinedList = new ArrayList<>(postsCombinedSet);
         // if the direction value is "desc"
         // we sort the posts in descending order-->reversed()
-        if (directionField.equals("desc")) {
+        if (direction.equals("desc")) {
             // we now begin sorting based on the value sortByFiled
             switch (sortByField) {
                 case "id":

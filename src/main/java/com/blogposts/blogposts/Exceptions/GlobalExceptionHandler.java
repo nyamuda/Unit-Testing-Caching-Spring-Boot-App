@@ -15,9 +15,8 @@ public class GlobalExceptionHandler {
     private ResponseEntity<Object> handleApiException(ApiException ex) {
         Map<String, String> errorObject = new HashMap<>();
         errorObject.put("error", ex.getLocalizedMessage());
-        ErrorDetails errorDetails = new ErrorDetails(HttpStatus.BAD_REQUEST, errorObject);
 
-        return new ResponseEntity<Object>(errorDetails, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<Object>(errorObject, HttpStatus.BAD_REQUEST);
     }
 
 }

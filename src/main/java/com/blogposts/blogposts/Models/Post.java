@@ -1,7 +1,6 @@
 package com.blogposts.blogposts.Models;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class Post {
