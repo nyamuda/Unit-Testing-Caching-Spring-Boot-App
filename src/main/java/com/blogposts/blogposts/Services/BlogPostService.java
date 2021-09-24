@@ -23,7 +23,7 @@ public class BlogPostService {
 
     public List<BlogPost> getPostsService(String tags, String sortBy, String direction) {
         // if the tags query parameter is not there--->throw an exception
-        if (tags == null) {
+        if (tags == null || tags.length() == 0) {
             throw new ApiException("Tags parameter is required");
         }
         // else extract the tags
@@ -63,7 +63,7 @@ public class BlogPostService {
         // if the direction value is "desc"
         // we sort the posts in descending order-->reversed()
         if (direction.equals("desc")) {
-            
+
             // we now begin sorting based on the value sortByFiled
             switch (sortByField) {
                 case "id":

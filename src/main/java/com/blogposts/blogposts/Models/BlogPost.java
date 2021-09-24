@@ -8,9 +8,19 @@ public class BlogPost {
     private String author;
     private int authorId;
     private int likes;
-    private float popularity;
+    private Double popularity;
     private int reads;
     private List<String> tags = new ArrayList<>();
+
+    public BlogPost(int id, String author, int authorId, int likes, double d, int reads, List<String> tags) {
+        this.id = id;
+        this.author = author;
+        this.authorId = authorId;
+        this.likes = likes;
+        this.popularity = d;
+        this.reads = reads;
+        this.tags = tags;
+    }
 
     public int getId() {
         return id;
@@ -28,7 +38,7 @@ public class BlogPost {
         return likes;
     }
 
-    public float getPopularity() {
+    public Double getPopularity() {
         return popularity;
     }
 
@@ -56,7 +66,7 @@ public class BlogPost {
         this.likes = likes;
     }
 
-    public void setPopularity(float popularity) {
+    public void setPopularity(Double popularity) {
         this.popularity = popularity;
     }
 
