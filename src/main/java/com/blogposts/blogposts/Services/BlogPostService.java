@@ -63,6 +63,7 @@ public class BlogPostService {
         // if the direction value is "desc"
         // we sort the posts in descending order-->reversed()
         if (direction.equals("desc")) {
+            
             // we now begin sorting based on the value sortByFiled
             switch (sortByField) {
                 case "id":
