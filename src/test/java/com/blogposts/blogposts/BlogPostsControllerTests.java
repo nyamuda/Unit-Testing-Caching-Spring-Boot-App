@@ -5,40 +5,21 @@ import com.blogposts.blogposts.Exceptions.ApiException;
 import com.blogposts.blogposts.Models.BlogPost;
 import com.blogposts.blogposts.Services.BlogPostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static org.hamcrest.Matchers.containsString;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-import static org.hamcrest.Matchers.contains;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.isNotNull;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.hamcrest.Matchers.*;
+import static java.util.Comparator.comparing;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -66,15 +47,15 @@ class BlogPostsControllerTests {
 		String[] techHealthTags = { "health", "tech" };
 		this.listOfBlogPosts = new ArrayList<>();
 		// posts tech only
-		this.listOfBlogPosts.add(new BlogPost(1, "John", 10, 1000, 0.8, 5000, Arrays.asList(techTag)));
+		this.listOfBlogPosts.add(new BlogPost(1, "John", 10, 1000, 0.8, 12000, Arrays.asList(techTag)));
 		this.listOfBlogPosts.add(new BlogPost(2, "Peter", 20, 2000, 0.15, 6000, Arrays.asList(techTag)));
 
 		// posts - health only
-		this.listOfBlogPosts.add(new BlogPost(3, "Amos", 30, 3000, 0.5, 7000, Arrays.asList(healthTag)));
-		this.listOfBlogPosts.add(new BlogPost(4, "Susan", 40, 4000, 0.68, 8000, Arrays.asList(healthTag)));
+		this.listOfBlogPosts.add(new BlogPost(3, "Amos", 30, 3000, 0.5, 18000, Arrays.asList(healthTag)));
+		this.listOfBlogPosts.add(new BlogPost(4, "Susan", 40, 4000, 0.68, 28000, Arrays.asList(healthTag)));
 
 		// post- health and tech
-		this.listOfBlogPosts.add(new BlogPost(5, "Chris", 50, 5000, 0.3, 9000, Arrays.asList(techHealthTags)));
+		this.listOfBlogPosts.add(new BlogPost(5, "Chris", 50, 5000, 0.3, 7000, Arrays.asList(techHealthTags)));
 	}
 
 	// TESTING THE FIRST ROUTE "/api/ping"
@@ -83,13 +64,13 @@ class BlogPostsControllerTests {
 		// given
 		String url = "/api/ping";
 		// we expect status 200 and {"success":true}
-		mockMvc.perform(get(url)).andExpect(status().isOk()).andExpect(jsonPath("success").value(false));
+		mockMvc.perform(get(url)).andExpect(status().isOk()).andExpect(jsonPath("success").value(true));
 
 	}
 
 	// TESTING THE SECOND ROUTE "/api/posts** with different query parameters"
 
-	// 1. ONE QUERY PARAMETER-->tags-->we expect a list of blogs
+	// 1. ONE QUERY PARAMETER-->tags-->we expect a list of blogs in ascending order
 	@Test
 	void tagsQueryParameter_itShouldReturn_ListOfBlogPosts() throws Exception {
 		// given
@@ -99,13 +80,68 @@ class BlogPostsControllerTests {
 		// using the BlogPostService mock to bypass the call to the actual service
 		when(blogPostService.getPostsService(techHealthTags, sortBy, direction)).thenReturn(listOfBlogPosts);
 
-		// we expect 5 posts
-		mockMvc.perform(get("/api/posts?tags=")).andExpect(status().isOk())
-				.andExpect(jsonPath("$.size()").value(listOfBlogPosts.size()));
-
+		// we expect the posts to be in ascending order
+		// the first post should have an id of 1 and last an id off 5
+		mockMvc.perform(get("/api/posts?tags=" + techHealthTags)).andExpect(status().isOk())
+				// we expect exactly 5 posts
+				.andExpect(jsonPath("$.size()").value(listOfBlogPosts.size()))
+				// first post must have id 1
+				.andExpect(jsonPath("$.[0].id").value(1))
+				// last post must have id 5
+				.andExpect(jsonPath("$.[4].id").value(5));
 	}
 
-	// 2. NO TAGS QUERY PARAMETER--> no tags-->we expect an error
+	// 2 Two QUERY PARAMETERS-->tags & direction-->we expect a list of blogs in
+	// descending order
+	@Test
+	void directionAndTagsParameters_itShouldReturn_PostsInDescendingOrder() throws Exception {
+		// given
+		String techHealthTags = "tech,health";
+		String sortBy = null;
+		String direction = "desc";
+		String url = "/api/posts?tags=" + techHealthTags + "&direction=" + direction;
+		// reversing the order of the list of posts-->descending order
+		listOfBlogPosts.sort(comparing(BlogPost::getId).reversed());
+		// using the BlogPostService mock to bypass the call to the actual service
+		when(blogPostService.getPostsService(techHealthTags, sortBy, direction)).thenReturn(listOfBlogPosts);
+
+		// expectation
+		mockMvc.perform(get(url)).andExpect(status().isOk())
+				// we expect exactly 5 posts
+				.andExpect(jsonPath("$.size()").value(listOfBlogPosts.size()))
+				// first post must have id 5
+				.andExpect(jsonPath("$.[0].id").value(5))
+				// last post must have id 1
+				.andExpect(jsonPath("$.[4].id").value(1));
+	}
+
+	// 3. tags, SortBy and direction QUERY PARAMETERS-->sorting by reads in
+	// descending order
+	// it should return posts in descending order
+	// the first post should have reading of 28000 and last one reads of 6000
+	@Test
+	void givenTagsSortByReadsAndDirectionDescending_itShouldReturn_allPostsSorted() throws Exception {
+		// given
+		String techHealthTags = "tech,health";
+		String sortBy = "reads";
+		String direction = "desc";
+		String url = "/api/posts?tags=" + techHealthTags + "&sortBy=" + sortBy + "&direction=" + direction;
+		// sorting the the list of posts by reads-->descending order
+		listOfBlogPosts.sort(comparing(BlogPost::getReads).reversed());
+		// using the BlogPostService mock to bypass the call to the actual service
+		when(blogPostService.getPostsService(techHealthTags, sortBy, direction)).thenReturn(listOfBlogPosts);
+
+		// expectation
+		mockMvc.perform(get(url)).andExpect(status().isOk())
+				// we expect exactly 5 posts
+				.andExpect(jsonPath("$.size()").value(listOfBlogPosts.size()))
+				// first post must have reads of 28000
+				.andExpect(jsonPath("$.[0].reads").value(28000))
+				// last post must have reads of 6000
+				.andExpect(jsonPath("$.[4].reads").value(6000));
+	}
+
+	// 4. NO TAGS QUERY PARAMETER--> no tags-->we expect an error
 	@Test
 	void noTags_thenShouldReturn_anError_status400() throws Exception {
 		// given
@@ -122,7 +158,8 @@ class BlogPostsControllerTests {
 				.andExpect(jsonPath("$.error").value("Tags parameter is required"));
 
 	}
-	// 3. sortBy QUERY PARAMETER invalid--> no tags-->we expect an error
+
+	// 5. sortBy QUERY PARAMETER invalid-->we expect an error
 	@Test
 	void invalidSortBy_thenShouldReturn_anError_status400() throws Exception {
 		// given
